@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clip AI - Turn videos into viral shorts</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #667eea;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: #667eea;
+        }
+        
+        .cta-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.7rem 1.5rem;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.3s;
+            text-decoration: none;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Main Content */
+        main {
+            margin-top: 80px;
+            padding: 4rem 0;
+        }
+        
+        .hero {
+            text-align: center;
+            margin-bottom: 4rem;
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .hero p {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        /* Video Generator Section */
+        .generator-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 3rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            background: #f8f9ff;
+            transition: all 0.3s;
+        }
+        
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+        
+        .upload-icon {
+            font-size: 3rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        .url-input {
+            width: 100%;
+            max-width: 500px;
+            padding: 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            margin: 1rem auto;
+            display: block;
+        }
+        
+        .process-button {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
+        }
+        
+        .process-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .process-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Features */
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: transform 0.3s;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            color: #667eea;
+            margin-bottom: 1rem;
+        }
+        
+        /* Processing Animation */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Results */
+        .results {
+            display: none;
+            margin-top: 2rem;
+        }
+        
+        .clip-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+        
+        .clip-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        
+        .clip-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .clip-thumbnail {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 3rem;
+        }
+        
+        .clip-info {
+            padding: 1.5rem;
+        }
+        
+        .clip-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+        
+        .clip-description {
+            color: #666;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .clip-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .action-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .download-btn {
+            background: #28a745;
+            color: white;
+        }
+        
+        .edit-btn {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            
+            .hero h1 {
+                font-size: 2rem;
+            }
+            
+            .generator-section {
+                padding: 2rem;
+            }
+            
+            .upload-area {
+                padding: 2rem;
+            }
+        }
+        
+        /* Footer */
+        footer {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+            margin-top: 4rem;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            display: none;
+            z-index: 1001;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .toast.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <i class="fas fa-video"></i>
+                Clip AI
+            </div>
+            <ul class="nav-links">
+                <li><a href="#home">Home</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+            <a href="#generate" class="cta-button">Start Creating</a>
+        </nav>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h1>Turn videos into viral shorts with AI</h1>
+            <p>Never spend hours editing your videos again. Clip AI uses advanced AI to automatically create engaging clips from your YouTube content.</p>
+            <button class="cta-button" onclick="scrollToGenerator()">
+                <i class="fas fa-rocket"></i> Generate Clips Now
+            </button>
+        </section>
+
+        <section class="generator-section" id="generate">
+            <h2 style="text-align: center; margin-bottom: 2rem; color: #333;">
+                <i class="fas fa-magic"></i> AI Video Clip Generator
+            </h2>
+            
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h3>Upload Your Video</h3>
+                <p>Drag & drop or click to select video files</p>
+                <p style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">Supports MP4, MOV, AVI</p>
+            </div>
+            
+            <div style="text-align: center; margin: 2rem 0;">
+                <span style="font-weight: bold; color: #666;">OR</span>
+            </div>
+            
+            <div style="text-align: center;">
+                <input type="url" class="url-input" id="youtubeUrl" placeholder="Paste YouTube URL here...">
+                <button class="process-button" onclick="processVideo()">
+                    <i class="fas fa-wand-magic-sparkles"></i> Generate AI Clips
+                </button>
+            </div>
+            
+            <input type="file" id="fileInput" style="display: none;" accept="video/*" onchange="handleFileUpload(event)">
+            
+            <div class="loading" id="loadingDiv">
+                <div class="spinner"></div>
+                <h3>AI is analyzing your video...</h3>
+                <p>Finding the best moments and creating viral clips</p>
+                <div style="margin-top: 1rem;">
+                    <div id="progressText">Processing: 0%</div>
+                </div>
+            </div>
+            
+            <div class="results" id="resultsDiv">
+                <h3 style="margin-bottom: 2rem; text-align: center;">🎉 Your AI-Generated Clips</h3>
+                <div class="clip-grid" id="clipGrid">
+                    <!-- Dynamic clips will be inserted here -->
+                </div>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h3>Smart AI Detection</h3>
+                <p>Our advanced AI analyzes your video content to identify the most engaging moments and automatically creates viral-worthy clips.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-closed-captioning"></i>
+                </div>
+                <h3>Auto Captions</h3>
+                <p>Automatically generates accurate captions with customizable fonts, colors, and styles to maximize engagement.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-mobile-alt"></i>
+                </div>
+                <h3>Multi-Platform Ready</h3>
+                <p>Optimized for TikTok, Instagram Reels, YouTube Shorts, and LinkedIn with perfect aspect ratios.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <h3>Face Detection</h3>
+                <p>Automatically reframes videos to keep faces centered and maintains visual engagement throughout the clip.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-language"></i>
+                </div>
+                <h3>Multi-Language Support</h3>
+                <p>Supports multiple languages including English, Spanish, French, German, and more with accurate transcription.</p>
+            </div>
+            
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <i class="fas fa-download"></i>
+                </div>
+                <h3>Instant Download</h3>
+                <p>Download your clips immediately in high quality. No watermarks on free plan - completely free forever!</p>
+            </div>
+        </section>
+
+        <section style="background: rgba(255,255,255,0.9); padding: 3rem; border-radius: 20px; margin: 3rem 0; text-align: center;">
+            <h2 style="margin-bottom: 2rem; color: #333;">🚀 Why Choose Clip AI?</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; text-align: left;">
+                <div>
+                    <h4><i class="fas fa-check-circle" style="color: #28a745;"></i> Completely Free</h4>
+                    <p>No hidden costs, no subscriptions, no watermarks</p>
+                </div>
+                <div>
+                    <h4><i class="fas fa-check-circle" style="color: #28a745;"></i> Lightning Fast</h4>
+                    <p>Get your clips ready in under 2 minutes</p>
+                </div>
+                <div>
+                    <h4><i class="fas fa-check-circle" style="color: #28a745;"></i> Professional Quality</h4>
+                    <p>Studio-grade editing powered by advanced AI</p>
+                </div>
+                <div>
+                    <h4><i class="fas fa-check-circle" style="color: #28a745;"></i> Easy to Use</h4>
+                    <p>Just paste a URL or upload - AI does the rest</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Clip AI. All rights reserved. | Made with ❤️ for creators</p>
+        </div>
+    </footer>
+
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Success!</span>
+    </div>
+
+    <script>
+        let currentVideo = null;
+        let generatedClips = [];
+        
+        function scrollToGenerator() {
+            document.getElementById('generate').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                currentVideo = {
+                    type: 'file',
+                    data: file,
+                    name: file.name
+                };
+                showToast(`Video "${file.name}" uploaded successfully!`);
+                document.querySelector('.upload-area h3').textContent = `✅ ${file.name}`;
+            }
+        }
+        
+        function processVideo() {
+            const youtubeUrl = document.getElementById('youtubeUrl').value;
+            
+            if (!currentVideo && !youtubeUrl) {
+                showToast('Please upload a video or enter a YouTube URL', 'error');
+                return;
+            }
+            
+            if (youtubeUrl && !isValidYouTubeUrl(youtubeUrl)) {
+                showToast('Please enter a valid YouTube URL', 'error');
+                return;
+            }
+            
+            // Show loading
+            document.getElementById('loadingDiv').style.display = 'block';
+            document.getElementById('resultsDiv').style.display = 'none';
+            
+            // Simulate AI processing
+            simulateAIProcessing();
+        }
+        
+        function isValidYouTubeUrl(url) {
+            const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtu\.be\/).+/;
+            return youtubeRegex.test(url);
+        }
+        
+        function simulateAIProcessing() {
+            let progress = 0;
+            const progressText = document.getElementById('progressText');
+            
+            const phases = [
+                "Downloading video...",
+                "Analyzing audio transcription...", 
+                "Detecting key moments...",
+                "Applying AI clip selection...",
+                "Generating captions...",
+                "Optimizing for social media...",
+                "Finalizing clips..."
+            ];
+            
+            const interval = setInterval(() => {
+                progress += Math.random() * 15;
+                if (progress > 100) progress = 100;
+                
+                const phaseIndex = Math.floor((progress / 100) * phases.length);
+                if (phaseIndex < phases.length) {
+                    progressText.textContent = `${phases[phaseIndex]} ${Math.round(progress)}%`;
+                }
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        document.getElementById('loadingDiv').style.display = 'none';
+                        showResults();
+                    }, 1000);
+                }
+            }, 300);
+        }
+        
+        function showResults() {
+            // Generate sample clips based on video analysis
+            const clips = generateSampleClips();
+            displayClips(clips);
+            document.getElementById('resultsDiv').style.display = 'block';
+            showToast('🎉 AI clips generated successfully!');
+        }
+        
+        function generateSampleClips() {
+            const videoSource = document.getElementById('youtubeUrl').value || 
+                              (currentVideo ? currentVideo.name : 'Uploaded Video');
+            
+            const clipTitles = [
+                "Most Engaging Moment",
+                "Key Insight Highlight", 
+                "Emotional Peak",
+                "Call to Action Segment",
+                "Best Quote Extract"
+            ];
+            
+            const descriptions = [
+                "High-energy moment with peak audience engagement",
+                "Core message that drives the main point home", 
+                "Emotionally compelling segment perfect for shares",
+                "Perfect ending clip with strong call-to-action",
+                "Memorable quote that summarizes key takeaway"
+            ];
+  
